@@ -1,0 +1,6 @@
+{
+  "name": "The Flying Whale Agency",
+  "description": "Full-service digital agency offering AI solutions, web and mobile app development, marketing, and custom digital experiences.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

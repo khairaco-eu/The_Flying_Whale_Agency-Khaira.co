@@ -5,9 +5,13 @@ import { Mail, Phone, MapPin, Twitter, Linkedin, Instagram, Youtube } from 'luci
 const Footer = () => {
   const currentYear = new Date().getFullYear();
 
+  const handleLinkClick = () => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
+  };
+
   const footerLinks = {
     services: [
-      { label: 'Websites & Funnels', path: '/services' },
+      { label: 'Websites & Funnels', path: '/websites-and-funnels' },
       { label: 'Marketing & SEO', path: '/services' },
       { label: 'Apps & Systems', path: '/services' },
       { label: 'AI Automations', path: '/services' },
@@ -39,11 +43,11 @@ const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-12">
           {/* Brand Column */}
           <div className="lg:col-span-2">
-            <Link to="/" className="inline-block mb-6">
+            <Link to="/" onClick={handleLinkClick} className="inline-block mb-6">
               <img
-                src="/images/logo.png"
+                src="/images/logof.png"
                 alt="Khaira.co"
-                className="h-20 w-35"
+                className="h-28 sm:h-32 w-auto object-contain -ml-2"
               />
             </Link>
             <p className="text-[#B8B8D1] text-sm leading-relaxed mb-6 max-w-sm">
@@ -74,6 +78,7 @@ const Footer = () => {
                 <li key={link.label}>
                   <Link
                     to={link.path}
+                    onClick={handleLinkClick}
                     className="text-[#B8B8D1] text-sm hover:text-[#9F7AEA] transition-colors duration-300"
                   >
                     {link.label}
@@ -91,6 +96,7 @@ const Footer = () => {
                 <li key={link.label}>
                   <Link
                     to={link.path}
+                    onClick={handleLinkClick}
                     className="text-[#B8B8D1] text-sm hover:text-[#9F7AEA] transition-colors duration-300"
                   >
                     {link.label}
@@ -108,6 +114,7 @@ const Footer = () => {
                 <li key={link.label}>
                   <Link
                     to={link.path}
+                    onClick={handleLinkClick}
                     className="text-[#B8B8D1] text-sm hover:text-[#9F7AEA] transition-colors duration-300"
                   >
                     {link.label}

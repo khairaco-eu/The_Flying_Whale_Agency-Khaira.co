@@ -90,7 +90,7 @@ const Services = () => {
   ];
 
   return (
-    <div className="min-h-screen pt-20">
+    <div className="min-h-screen pt-28 sm:pt-32">
       {/* Hero Section */}
       <section className="relative py-24 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-[#1A1A2E] via-[#1A1A2E] to-[#553C9A]/20" />
@@ -116,10 +116,24 @@ const Services = () => {
               Everything you need to{' '}
               <span className="text-gradient">succeed online</span>
             </h1>
-            <p className="text-lg text-[#B8B8D1] leading-relaxed">
+            <p className="text-lg text-[#B8B8D1] leading-relaxed mb-8">
               From stunning websites to intelligent AI solutions, we provide 
               end-to-end digital services that help your business thrive in the modern world.
             </p>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.3 }}
+              className="flex flex-col sm:flex-row items-center justify-center gap-4"
+            >
+              <Link
+                to="/websites-and-funnels"
+                className="inline-flex items-center gap-2.5 px-8 py-4 rounded-full bg-gradient-to-r from-[#6B46C1] to-[#9F7AEA] hover:from-[#7B52D9] hover:to-[#AF88F8] text-white font-semibold text-sm sm:text-base shadow-xl shadow-purple-500/25 hover:shadow-purple-500/40 transition-all duration-300 group"
+              >
+                <span>Explore 3 Live Examples & Case Studies</span>
+                <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
+              </Link>
+            </motion.div>
           </motion.div>
         </div>
       </section>

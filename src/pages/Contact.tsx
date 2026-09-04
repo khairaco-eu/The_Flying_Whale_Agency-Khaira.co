@@ -1,8 +1,12 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Sparkles, Mail, Phone, MapPin, Send, Check, Linkedin, Twitter, Instagram, Youtube } from 'lucide-react';
+import { Sparkles, Mail, Phone, MapPin, Send, Check, Loader2, AlertCircle, Linkedin, Twitter, Instagram, Youtube, Calendar } from 'lucide-react';
+import { useBooking } from '../context/BookingContext';
+
+const RECIPIENT_EMAIL = 'khairaco.eu@gmail.com';
 
 const Contact = () => {
+  const { openBooking } = useBooking();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -10,22 +14,57 @@ const Contact = () => {
     service: '',
     message: '',
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Simulate form submission
-    setIsSubmitted(true);
-    setTimeout(() => {
-      setIsSubmitted(false);
-      setFormData({
-        name: '',
-        email: '',
-        company: '',
-        service: '',
-        message: '',
+    setIsSubmitting(true);
+    setErrorMessage(null);
+
+    try {
+      const response = await fetch(`https://formsubmit.co/ajax/${RECIPIENT_EMAIL}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          company: formData.company || 'Not specified',
+          service: formData.service || 'Not specified',
+          message: formData.message,
+          _subject: `New Query from ${formData.name} - The Flying Whale Agency`,
+          _replyto: formData.email,
+          _template: 'table',
+          _captcha: 'false',
+        }),
       });
-    }, 3000);
+
+      const data = await response.json();
+
+      if (response.ok && (data.success === 'true' || data.success === true || response.status === 200)) {
+        setIsSubmitted(true);
+        setFormData({
+          name: '',
+          email: '',
+          company: '',
+          service: '',
+          message: '',
+        });
+      } else {
+        throw new Error(data.message || 'Unable to submit your query at this moment.');
+      }
+    } catch (err: any) {
+      console.error('Submission error:', err);
+      setErrorMessage(
+        err?.message || 'Something went wrong submitting your query. Please try again or email directly.'
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -33,6 +72,11 @@ const Contact = () => {
       ...formData,
       [e.target.name]: e.target.value,
     });
+  };
+
+  const resetForm = () => {
+    setIsSubmitted(false);
+    setErrorMessage(null);
   };
 
   const services = [
@@ -47,8 +91,8 @@ const Contact = () => {
     {
       icon: Mail,
       label: 'Email',
-      value: 'info@khaira-co.eu',
-      href: 'mailto:info@khaira-co.eu',
+      value: RECIPIENT_EMAIL,
+      href: `mailto:${RECIPIENT_EMAIL}`,
     },
     {
       icon: Phone,
@@ -72,7 +116,7 @@ const Contact = () => {
   ];
 
   return (
-    <div className="min-h-screen pt-20">
+    <div className="min-h-screen pt-28 sm:pt-32">
       {/* Hero Section */}
       <section className="relative py-24 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-[#1A1A2E] via-[#1A1A2E] to-[#553C9A]/20" />
@@ -122,18 +166,46 @@ const Contact = () => {
                   <motion.div
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    className="text-center py-12"
+                    className="text-center py-10"
                   >
-                    <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[#6B46C1] to-[#9F7AEA] flex items-center justify-center mx-auto mb-6">
+                    <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[#6B46C1] to-[#9F7AEA] flex items-center justify-center mx-auto mb-6 shadow-lg shadow-purple-500/30">
                       <Check size={40} className="text-white" />
                     </div>
-                    <h3 className="text-2xl font-bold mb-4">Message Sent!</h3>
-                    <p className="text-[#B8B8D1]">
-                      Thank you for reaching out. We'll get back to you within 24 hours.
+                    <h3 className="text-2xl font-bold mb-3 text-white">Query Sent Successfully!</h3>
+                    <p className="text-[#B8B8D1] max-w-md mx-auto mb-2 text-base leading-relaxed">
+                      Thank you for contacting us. Your project query and details have been dispatched to{' '}
+                      <span className="text-[#9F7AEA] font-medium">{RECIPIENT_EMAIL}</span>.
                     </p>
+                    <p className="text-sm text-[#B8B8D1]/80 mb-8">
+                      We'll review your inquiry and respond within 24 hours.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={resetForm}
+                      className="px-6 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-medium text-sm transition-all duration-200 border border-white/15"
+                    >
+                      Send another message
+                    </button>
                   </motion.div>
                 ) : (
                   <form onSubmit={handleSubmit} className="space-y-6">
+                    {errorMessage && (
+                      <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/30 text-red-200 text-sm flex items-start gap-3">
+                        <AlertCircle size={20} className="text-red-400 shrink-0 mt-0.5" />
+                        <div className="flex-1">
+                          <p className="font-medium mb-1">{errorMessage}</p>
+                          <a
+                            href={`mailto:${RECIPIENT_EMAIL}?subject=Inquiry from ${encodeURIComponent(formData.name || 'Client')}&body=${encodeURIComponent(
+                              `Name: ${formData.name}\nEmail: ${formData.email}\nCompany: ${formData.company || 'N/A'}\nService: ${formData.service || 'N/A'}\n\nMessage:\n${formData.message}`
+                            )}`}
+                            className="text-[#9F7AEA] underline hover:text-white transition-colors"
+                          >
+                            Click here to email khairaco.eu@gmail.com directly
+                          </a>
+                        </div>
+                      </div>
+                    )}
+
                     <div className="grid md:grid-cols-2 gap-6">
                       <div>
                         <label className="block text-sm font-medium mb-2">Your Name</label>
@@ -143,7 +215,8 @@ const Contact = () => {
                           value={formData.name}
                           onChange={handleChange}
                           required
-                          className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-[#B8B8D1] focus:outline-none focus:border-[#6B46C1] transition-colors"
+                          disabled={isSubmitting}
+                          className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-[#B8B8D1] focus:outline-none focus:border-[#6B46C1] transition-colors disabled:opacity-50"
                           placeholder="John Doe"
                         />
                       </div>
@@ -155,7 +228,8 @@ const Contact = () => {
                           value={formData.email}
                           onChange={handleChange}
                           required
-                          className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-[#B8B8D1] focus:outline-none focus:border-[#6B46C1] transition-colors"
+                          disabled={isSubmitting}
+                          className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-[#B8B8D1] focus:outline-none focus:border-[#6B46C1] transition-colors disabled:opacity-50"
                           placeholder="john@example.com"
                         />
                       </div>
@@ -169,7 +243,8 @@ const Contact = () => {
                           name="company"
                           value={formData.company}
                           onChange={handleChange}
-                          className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-[#B8B8D1] focus:outline-none focus:border-[#6B46C1] transition-colors"
+                          disabled={isSubmitting}
+                          className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-[#B8B8D1] focus:outline-none focus:border-[#6B46C1] transition-colors disabled:opacity-50"
                           placeholder="Your Company"
                         />
                       </div>
@@ -179,7 +254,8 @@ const Contact = () => {
                           name="service"
                           value={formData.service}
                           onChange={handleChange}
-                          className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-[#6B46C1] transition-colors"
+                          disabled={isSubmitting}
+                          className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-[#6B46C1] transition-colors disabled:opacity-50"
                         >
                           <option value="" className="bg-[#1A1A2E]">Select a service</option>
                           {services.map((service) => (
@@ -199,20 +275,35 @@ const Contact = () => {
                         onChange={handleChange}
                         required
                         rows={5}
-                        className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-[#B8B8D1] focus:outline-none focus:border-[#6B46C1] transition-colors resize-none"
+                        disabled={isSubmitting}
+                        className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-[#B8B8D1] focus:outline-none focus:border-[#6B46C1] transition-colors resize-none disabled:opacity-50"
                         placeholder="Tell us about your project..."
                       />
                     </div>
 
                     <motion.button
                       type="submit"
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      className="w-full py-4 bg-gradient-to-r from-[#6B46C1] to-[#9F7AEA] rounded-xl font-semibold text-white shadow-lg shadow-purple-500/25 hover:shadow-purple-500/40 transition-all duration-300 flex items-center justify-center gap-2"
+                      disabled={isSubmitting}
+                      whileHover={isSubmitting ? {} : { scale: 1.02 }}
+                      whileTap={isSubmitting ? {} : { scale: 0.98 }}
+                      className="w-full py-4 bg-gradient-to-r from-[#6B46C1] to-[#9F7AEA] rounded-xl font-semibold text-white shadow-lg shadow-purple-500/25 hover:shadow-purple-500/40 transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed cursor-pointer"
                     >
-                      Send Message
-                      <Send size={18} />
+                      {isSubmitting ? (
+                        <>
+                          <Loader2 size={18} className="animate-spin" />
+                          <span>Sending query...</span>
+                        </>
+                      ) : (
+                        <>
+                          <span>Send Message</span>
+                          <Send size={18} />
+                        </>
+                      )}
                     </motion.button>
+
+                    <p className="text-center text-xs text-[#B8B8D1]/70">
+                      Queries are delivered directly to {RECIPIENT_EMAIL}
+                    </p>
                   </form>
                 )}
               </div>
@@ -267,22 +358,28 @@ const Contact = () => {
                 </div>
               </div>
 
-              <div className="bg-gradient-to-br from-[#6B46C1]/20 to-[#9F7AEA]/20 rounded-2xl p-8">
-                <h3 className="text-lg font-semibold mb-4">Schedule a Call</h3>
-                <p className="text-[#B8B8D1] text-sm mb-6">
-                  Prefer to talk? Book a free 30-minute strategy call with our team.
+              <div className="bg-gradient-to-br from-[#6B46C1]/20 via-[#4285F4]/15 to-[#9F7AEA]/20 border border-white/10 rounded-2xl p-8">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#4285F4]/15 border border-[#4285F4]/30 text-[#8ab4f8] text-xs font-medium mb-3">
+                  <Calendar size={13} className="text-[#8ab4f8]" />
+                  <span>Google Calendar</span>
+                </div>
+                <h3 className="text-xl font-bold mb-3 text-white">Schedule a Call</h3>
+                <p className="text-[#B8B8D1] text-sm mb-6 leading-relaxed">
+                  Prefer to talk? Book a free 30-minute strategy call with our team directly via Google Calendar.
                 </p>
                 <motion.a
-  href="https://wa.me/48452193173"
-  target="_blank"
-  rel="noopener noreferrer"
-  whileHover={{ scale: 1.02 }}
-  whileTap={{ scale: 0.98 }}
-  className="block w-full py-3 bg-white/10 border border-white/20 rounded-xl font-semibold text-white hover:bg-white/20 transition-all duration-300 text-center"
->
-  Book a Call
-</motion.a>
-
+                  href="#book-strategy-call"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    openBooking();
+                  }}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="w-full py-3.5 px-6 bg-gradient-to-r from-[#4285F4] via-[#6B46C1] to-[#9F7AEA] hover:opacity-95 rounded-xl font-semibold text-white shadow-lg shadow-purple-500/25 transition-all duration-300 text-center flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <Calendar size={18} />
+                  <span>Book a Call via Google Calendar</span>
+                </motion.a>
               </div>
             </motion.div>
           </div>
